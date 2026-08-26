@@ -1,5 +1,6 @@
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://clinicalnote-ai-backend.onrender.com";
 
 export type Patient = {
   id: number | string;
@@ -27,13 +28,17 @@ async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+  const url = `${API_BASE_URL}${endpoint}`;
+
+  const response = await fetch(url, {
     ...options,
     headers: {
       Accept: "application/json",
       ...(options.body instanceof FormData
         ? {}
-        : { "Content-Type": "application/json" }),
+        : {
+            "Content-Type": "application/json",
+          }),
       ...(options.headers || {}),
     },
   });
@@ -48,7 +53,7 @@ async function request<T>(
     );
   }
 
-  return response.json();
+  return response.json() as Promise<T>;
 }
 
 export const api = {
@@ -108,18 +113,36 @@ export const api = {
     };
   },
 
-  transcribeAudio: async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
+  
+transcribeAudio: async (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
 
-    return request<{
-      success: boolean;
-      transcript: string;
-    }>("/api/transcribe", {
+  const response = await fetch(
+    `${API_BASE_URL}/api/transcribe`,
+    {
       method: "POST",
       body: formData,
-    });
-  },
+    }
+  );
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(
+      `Transcription failed (${response.status}): ${text}`
+    );
+  }
+
+  try {
+    return JSON.parse(text) as {
+      success: boolean;
+      transcript: string;
+    };
+  } catch {
+    throw new Error(`Invalid transcription response: ${text}`);
+  }
+},
 
   // =====================================================
   // AI CLINICAL NOTE

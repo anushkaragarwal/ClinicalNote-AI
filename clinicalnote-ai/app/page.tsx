@@ -327,11 +327,19 @@ export default function Page() {
   const [note, setNote] = useState<GeneratedNote | null>(null)
   const [loadError, setLoadError] = useState('')
 
-  useEffect(() => {
-    if (screen === 'dashboard' || screen === 'patients' || screen === 'start') {
-      api.getPatients().then(setPatients).catch(e => setLoadError(e instanceof Error ? e.message : 'Failed to load patients'))
-    }
-  }, [screen])
+ useEffect(() => {
+  if (screen === 'dashboard' || screen === 'patients' || screen === 'start') {
+    api.getPatients()
+      .then((data) => {
+        setPatients(data)
+      })
+      .catch((e) => {
+        setLoadError(
+          e instanceof Error ? e.message : 'Failed to load patients'
+        )
+      })
+  }
+}, [screen])
 
   const navigate = (s: Screen) => setScreen(s)
 
