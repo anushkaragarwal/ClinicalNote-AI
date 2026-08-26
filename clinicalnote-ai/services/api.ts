@@ -1,6 +1,4 @@
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL ||
-  "https://clinicalnote-ai-backend.onrender.com";
+const API_BASE_URL = "https://clinicalnote-ai-backend.onrender.com";
 
 export type Patient = {
   id: number | string;
