@@ -1,6 +1,9 @@
 import os
 import uuid
 
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
 
@@ -56,16 +59,17 @@ def create_patient(
 @router.post("/transcribe")
 async def transcribe(file: UploadFile = File(...)):
 
-    extension = os.path.splitext(file.filename)[1]
+    extension = os.path.splitext(file.filename or "")[1] or ".webm"
     filename = f"{uuid.uuid4()}{extension}"
 
-    path = os.path.join("uploads", filename)
+    path = os.path.join(UPLOAD_DIR, filename)
 
     with open(path, "wb") as buffer:
         buffer.write(await file.read())
 
     try:
         transcript = transcribe_audio(path)
+
         return {
             "success": True,
             "transcript": transcript
